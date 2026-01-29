@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Spicy Bits</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on Spicy Bits</description>
+    <generator>Hugo -- 0.155.0</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 20 May 2024 10:00:00 +0800</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hello World</title>
+      <link>http://localhost:1313/posts/helloworld/</link>
+      <pubDate>Mon, 20 May 2024 10:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/posts/helloworld/</guid>
+      <description>&lt;h1 id=&#34;欢迎来到我的博客&#34;&gt;欢迎来到我的博客&lt;/h1&gt;
+&lt;p&gt;这是我在 Hugo 上搭建的第一篇博客文章。&lt;/p&gt;
+&lt;p&gt;Hugo 是一个用 Go 语言编写的静态网站生成器，它的速度非常快。&lt;/p&gt;
+&lt;h2 id=&#34;为什么选择-hugo&#34;&gt;为什么选择 Hugo&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;生成速度极快&lt;/li&gt;
+&lt;li&gt;主题丰富&lt;/li&gt;
+&lt;li&gt;易于部署到 GitHub Pages&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+  </channel>
+</rss>
