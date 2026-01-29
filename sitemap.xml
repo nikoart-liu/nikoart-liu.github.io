@@ -2,25 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>http://localhost:63067/categories/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/helloworld/</loc>
+    <loc>http://localhost:63067/posts/helloworld/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/</loc>
+    <loc>http://localhost:63067/posts/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/</loc>
+    <loc>http://localhost:63067/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>http://localhost:63067/tags/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/%E5%85%A5%E9%97%A8/</loc>
+    <loc>http://localhost:63067/tags/%E5%85%A5%E9%97%A8/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/%E9%9A%8F%E7%AC%94/</loc>
+    <loc>http://localhost:63067/categories/%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2024-05-20T10:00:00+08:00</lastmod>
   </url>
 </urlset>
