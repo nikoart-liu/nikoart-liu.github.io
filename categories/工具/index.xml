@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>工具 on Spicy Bits</title><link>https://nikoart-liu.github.io/categories/%E5%B7%A5%E5%85%B7/</link><description>Recent content in 工具 on Spicy Bits</description><generator>Hugo -- 0.155.0</generator><language>zh-CN</language><lastBuildDate>Thu, 29 Jan 2026 16:10:13 +0800</lastBuildDate><atom:link href="https://nikoart-liu.github.io/categories/%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml"/><item><title>Hugo 搭建博客并部署到 Github Pages 指南</title><link>https://nikoart-liu.github.io/posts/hugo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E5%B9%B6%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/</link><pubDate>Thu, 29 Jan 2026 16:10:13 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/hugo%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E5%B9%B6%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/</guid><description>&lt;h1 id="一环境准备及-hugo-安装"&gt;一、环境准备及 Hugo 安装&lt;/h1&gt;
+&lt;h2 id="安装-homebrew"&gt;安装 Homebrew&lt;/h2&gt;
+&lt;p&gt;如果你还没有安装 Homebrew，请先打开终端执行以下命令来安装这个 macOS 上最常用的包管理器：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;/bin/bash -c &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="使用-homebrew-安装-hugo"&gt;使用 Homebrew 安装 Hugo&lt;/h2&gt;
+&lt;p&gt;Homebrew 安装包的方式非常简洁，一条命令即可完成：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;brew install hugo
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;安装完成后，验证 Hugo 是否正确安装：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;hugo version
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果终端显示类似 &lt;code&gt;hugo v0.155.0+extended+withdeploy darwin/arm64 BuildDate=2026-01-28T16:28:23Z VendorInfo=Homebrew&lt;/code&gt; 的版本信息，说明安装成功。&lt;/p&gt;
+&lt;h1 id="二创建-hugo-站点"&gt;二、创建 Hugo 站点&lt;/h1&gt;
+&lt;h2 id="初始化站点"&gt;初始化站点&lt;/h2&gt;
+&lt;p&gt;使用 Hugo 命令创建一个全新的网站基础结构：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;hugo new site my-blog --format&lt;span style="color:#f92672"&gt;=&lt;/span&gt;yaml
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd my-blog
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;git init
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;执行完成后，Hugo 会创建一个名为 my-blog 的目录。进入这个目录查看自动生成的文件结构：&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;my-blog/
+├── archetypes/
+│ └── default.md
+├── content/
+├── layouts/
+├── static/
+├── themes/
+└── hugo.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这个结构的设计非常清晰：&lt;/p&gt;</description></item></channel></rss>
