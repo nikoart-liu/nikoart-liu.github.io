@@ -1,4 +1,543 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Spicy Bits</title><link>https://nikoart-liu.github.io/</link><description>Recent content on Spicy Bits</description><generator>Hugo -- 0.155.0</generator><language>zh-CN</language><lastBuildDate>Thu, 29 Jan 2026 14:30:00 +0800</lastBuildDate><atom:link href="https://nikoart-liu.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Hello World</title><link>https://nikoart-liu.github.io/posts/helloworld/</link><pubDate>Thu, 29 Jan 2026 14:30:00 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/helloworld/</guid><description>&lt;h1 id="欢迎来到我的博客11"&gt;欢迎来到我的博客11&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Spicy Bits</title><link>https://nikoart-liu.github.io/</link><description>Recent content on Spicy Bits</description><generator>Hugo -- 0.155.0</generator><language>zh-CN</language><lastBuildDate>Thu, 29 Jan 2026 14:51:43 +0800</lastBuildDate><atom:link href="https://nikoart-liu.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Rust - 迭代器与闭包</title><link>https://nikoart-liu.github.io/posts/rust%E8%BF%AD%E4%BB%A3%E5%99%A8%E4%B8%8E%E9%97%AD%E5%8C%85/</link><pubDate>Thu, 29 Jan 2026 14:51:43 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/rust%E8%BF%AD%E4%BB%A3%E5%99%A8%E4%B8%8E%E9%97%AD%E5%8C%85/</guid><description>&lt;h1 id="rust---迭代器与闭包"&gt;Rust - 迭代器与闭包&lt;/h1&gt;
+&lt;h2 id="知识概览"&gt;知识概览&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;核心主题&lt;/strong&gt;：Iterator trait、惰性求值、常用适配器 (&lt;code&gt;map&lt;/code&gt;, &lt;code&gt;filter&lt;/code&gt;, &lt;code&gt;collect&lt;/code&gt;)、闭包捕获与 &lt;code&gt;Fn&lt;/code&gt;/&lt;code&gt;FnMut&lt;/code&gt;/&lt;code&gt;FnOnce&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;重要性&lt;/strong&gt;：⭐⭐⭐⭐⭐ 在数据处理、流式计算、函数式编程中必备。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;前置知识&lt;/strong&gt;：所有权、借用、&lt;code&gt;match&lt;/code&gt;、&lt;code&gt;Result&lt;/code&gt;（错误处理）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="核心概念"&gt;核心概念&lt;/h2&gt;
+&lt;h3 id="1-iterator-trait--惰性求值"&gt;1. Iterator trait &amp;amp; 惰性求值&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;trait&lt;/span&gt; Iterator {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;type&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Item&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;next&lt;/span&gt;(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;mut&lt;/span&gt; self) -&amp;gt; Option&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;Self::Item&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;惰性&lt;/strong&gt;：仅在调用 &lt;code&gt;next()&lt;/code&gt;（或消费方法如 &lt;code&gt;collect&lt;/code&gt;, &lt;code&gt;fold&lt;/code&gt;）时产生元素。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优势&lt;/strong&gt;：省内存、可提前终止（如 &lt;code&gt;find&lt;/code&gt;、&lt;code&gt;any&lt;/code&gt;），提升性能。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="2-迭代器常用方法"&gt;2. 迭代器常用方法&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;方法&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;th&gt;示例&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;into_iter()&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;消费所有权，返回 &lt;code&gt;T&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;vec.into_iter()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;iter()&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;只读引用 &lt;code&gt;&amp;amp;T&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;vec.iter()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;filter&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;过滤满足条件的元素&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;.filter(|x| x% 2 == 0)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;map&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;转换元素&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;.map(|x| x * x)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;collect&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;收集到容器&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;.collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fold&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;累积状态&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;.fold(0,|acc, x| acc + x)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h4 id="检查点答案"&gt;检查点答案&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;iter()&lt;/code&gt; 返回 &lt;code&gt;&amp;amp;T&lt;/code&gt; 迭代器，&lt;code&gt;into_iter()&lt;/code&gt; 返回拥有所有权的 &lt;code&gt;T&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;collect()&lt;/code&gt; 在 &lt;code&gt;filter&lt;/code&gt;+&lt;code&gt;map&lt;/code&gt; 链中只会在最终调用时遍历一次。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="3-闭包捕获方式"&gt;3. 闭包捕获方式&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;捕获方式&lt;/th&gt;
+&lt;th&gt;关键字&lt;/th&gt;
+&lt;th&gt;适用场景&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;按引用&lt;/td&gt;
+&lt;td&gt;无&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;filter(|x| x.starts_with(prefix))&lt;/code&gt;&lt;!-- raw HTML omitted --&gt;（&lt;code&gt;prefix&lt;/code&gt; 为 &lt;code&gt;&amp;amp;str&lt;/code&gt;）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;按可变引用&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp;mut&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;for_each(|x| cnt += 1)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;按值 (move)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;move&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;需要所有权，如 &lt;code&gt;let s = String::from(&amp;quot;hi&amp;quot;); let c = move |x| x;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;Fn&lt;/code&gt;&lt;/strong&gt;：只读捕获（&lt;code&gt;filter&lt;/code&gt;, &lt;code&gt;map&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;FnMut&lt;/code&gt;&lt;/strong&gt;：可变捕获（&lt;code&gt;for_each&lt;/code&gt; 改变外部变量）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;FnOnce&lt;/code&gt;&lt;/strong&gt;：移动捕获（一次性消费）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="4-链式适配器与实际案例"&gt;4. 链式适配器与实际案例&lt;/h3&gt;
+&lt;h4 id="词频统计示例"&gt;词频统计（示例）&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::collections::HashMap;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::fs;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; text &lt;span style="color:#f92672"&gt;=&lt;/span&gt; fs::read_to_string(&lt;span style="color:#e6db74"&gt;&amp;#34;poem.txt&amp;#34;&lt;/span&gt;).expect(&lt;span style="color:#e6db74"&gt;&amp;#34;read failed&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 统计所有单词频率
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; freq: &lt;span style="color:#a6e22e"&gt;HashMap&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String, &lt;span style="color:#66d9ef"&gt;usize&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; text
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .split_whitespace()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .fold(HashMap::new(), &lt;span style="color:#f92672"&gt;|&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;mut&lt;/span&gt; map, word&lt;span style="color:#f92672"&gt;|&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;*&lt;/span&gt;map.entry(word.to_string()).or_insert(&lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;) &lt;span style="color:#f92672"&gt;+=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; map
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; })
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 过滤出现次数 &amp;gt;= 2 的词
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .into_iter()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .filter(&lt;span style="color:#f92672"&gt;|&lt;/span&gt;(_, count)&lt;span style="color:#f92672"&gt;|&lt;/span&gt; &lt;span style="color:#f92672"&gt;*&lt;/span&gt;count &lt;span style="color:#f92672"&gt;&amp;gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .collect();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;println!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#e6db74"&gt;{:?}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;, freq);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;关键在 &lt;strong&gt;&lt;code&gt;into_iter()&lt;/code&gt;&lt;/strong&gt; 后再 &lt;code&gt;filter&lt;/code&gt;，避免引用与所有权冲突。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="常见陷阱"&gt;常见陷阱&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;问题&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;th&gt;解决方案&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;collect()&lt;/code&gt; 后的 &lt;code&gt;HashMap&lt;/code&gt; 再 &lt;code&gt;iter()&lt;/code&gt; 导致引用错误&lt;/td&gt;
+&lt;td&gt;需要拥有所有权进行过滤&lt;/td&gt;
+&lt;td&gt;使用 &lt;code&gt;into_iter()&lt;/code&gt; 或克隆键值&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;在 &lt;code&gt;filter&lt;/code&gt; 中捕获 &lt;code&gt;String&lt;/code&gt; 而不 &lt;code&gt;move&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;默认按引用捕获导致借用冲突&lt;/td&gt;
+&lt;td&gt;加 &lt;code&gt;move&lt;/code&gt; 或使用 &lt;code&gt;&amp;amp;str&lt;/code&gt; 预先借用&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;误把 &lt;code&gt;iter()&lt;/code&gt; 当作消费所有权&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;iter()&lt;/code&gt; 只借用，后续使用会报错&lt;/td&gt;
+&lt;td&gt;根据需求选择 &lt;code&gt;into_iter()&lt;/code&gt; 或 &lt;code&gt;iter()&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="关键要点"&gt;关键要点&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;惰性&lt;/strong&gt;：只有在消费时才遍历。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;所有权 vs 引用&lt;/strong&gt;：&lt;code&gt;into_iter()&lt;/code&gt; 消费，&lt;code&gt;iter()&lt;/code&gt; 借用。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;闭包捕获&lt;/strong&gt;：&lt;code&gt;move&lt;/code&gt; 取得所有权，&lt;code&gt;Fn&lt;/code&gt;/&lt;code&gt;FnMut&lt;/code&gt;/&lt;code&gt;FnOnce&lt;/code&gt; 对应捕获方式。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;链式&lt;/strong&gt;：&lt;code&gt;filter -&amp;gt; map -&amp;gt; collect&lt;/code&gt; 形成数据管道，保持简洁。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;错误处理&lt;/strong&gt;：&lt;code&gt;Result&lt;/code&gt; 与 &lt;code&gt;expect&lt;/code&gt; 用于文件读取等 IO 操作。&lt;/li&gt;
+&lt;/ol&gt;</description></item><item><title>Rust - IO</title><link>https://nikoart-liu.github.io/posts/rustio/</link><pubDate>Thu, 29 Jan 2026 14:50:22 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/rustio/</guid><description>&lt;h1 id="rust---io"&gt;Rust - I/O&lt;/h1&gt;
+&lt;h2 id="知识概览"&gt;知识概览&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;核心主题&lt;/strong&gt;：构建命令行搜索工具（minigrep）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;重要性&lt;/strong&gt;：⭐⭐⭐⭐⭐ 综合应用前几章知识&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;前置知识&lt;/strong&gt;：环境安装、所有权、Trait、错误处理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="核心概念"&gt;核心概念&lt;/h2&gt;
+&lt;h3 id="命令行参数解析"&gt;命令行参数解析&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::env;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; args: Vec&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; env::args().collect();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// args[0] = 程序名
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// args[1] = 第一个参数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// args[2] = 第二个参数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;println!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;搜索词: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;{}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;, args[&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;println!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;文件: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;{}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;, args[&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="文件读取"&gt;文件读取&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::fs;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; contents &lt;span style="color:#f92672"&gt;=&lt;/span&gt; fs::read_to_string(filename)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .expect(&lt;span style="color:#e6db74"&gt;&amp;#34;无法读取文件&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// contents 是 String，包含整个文件内容
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="配置模式config-pattern"&gt;配置模式（Config Pattern）&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Config&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; query: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; filename: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; case_sensitive: &lt;span style="color:#66d9ef"&gt;bool&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;impl&lt;/span&gt; Config {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;new&lt;/span&gt;(args: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;[String]) -&amp;gt; Result&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;Config, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;&amp;#39;static &lt;span style="color:#66d9ef"&gt;str&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; args.len() &lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; Err(&lt;span style="color:#e6db74"&gt;&amp;#34;参数不足&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; query &lt;span style="color:#f92672"&gt;=&lt;/span&gt; args[&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;].clone();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; filename &lt;span style="color:#f92672"&gt;=&lt;/span&gt; args[&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;].clone();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; case_sensitive &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#f92672"&gt;!&lt;/span&gt;args.iter().any(&lt;span style="color:#f92672"&gt;|&lt;/span&gt;arg&lt;span style="color:#f92672"&gt;|&lt;/span&gt; arg &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;-i&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Ok(Config { query, filename, case_sensitive })
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="错误处理"&gt;错误处理&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;场景&lt;/th&gt;
+&lt;th&gt;方式&lt;/th&gt;
+&lt;th&gt;示例&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;致命错误&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expect&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;fs::read_to_string(...).expect(...)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;可恢复错误&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Result&lt;/code&gt; + &lt;code&gt;match&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Config::new(...)?&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;用户提示&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;eprintln!&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;eprintln!(&amp;quot;用法: ...&amp;quot;)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="项目结构"&gt;项目结构&lt;/h2&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;minigrep/
+├── src/
+│ └── main.rs # 主程序
+├── Cargo.toml
+└── poem.txt # 测试文件
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id="完整代码"&gt;完整代码&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// src/main.rs
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::env;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; std::fs;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Config&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; query: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; filename: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; case_sensitive: &lt;span style="color:#66d9ef"&gt;bool&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;impl&lt;/span&gt; Config {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;new&lt;/span&gt;(args: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;[String]) -&amp;gt; Result&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;Config, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;&amp;#39;static &lt;span style="color:#66d9ef"&gt;str&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; args.len() &lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; Err(&lt;span style="color:#e6db74"&gt;&amp;#34;参数不足&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; query &lt;span style="color:#f92672"&gt;=&lt;/span&gt; args[&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;].clone();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; filename &lt;span style="color:#f92672"&gt;=&lt;/span&gt; args[&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;].clone();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; case_sensitive &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#f92672"&gt;!&lt;/span&gt;args.iter().any(&lt;span style="color:#f92672"&gt;|&lt;/span&gt;arg&lt;span style="color:#f92672"&gt;|&lt;/span&gt; arg &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;-i&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Ok(Config { query, filename, case_sensitive })
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; args: Vec&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; env::args().collect();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; config &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;match&lt;/span&gt; Config::new(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Ok(config) &lt;span style="color:#f92672"&gt;=&amp;gt;&lt;/span&gt; config,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Err(e) &lt;span style="color:#f92672"&gt;=&amp;gt;&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;panic!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#e6db74"&gt;{e}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; contents &lt;span style="color:#f92672"&gt;=&lt;/span&gt; fs::read_to_string(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;config.filename)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .expect(&lt;span style="color:#e6db74"&gt;&amp;#34;无法读取文件&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; results &lt;span style="color:#f92672"&gt;=&lt;/span&gt; search(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;config, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;contents);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; line &lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; results {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;println!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#e6db74"&gt;{line}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;search&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#39;a&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt;(config: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#39;a&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Config&lt;/span&gt;, contents: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#39;a&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;str&lt;/span&gt;) -&amp;gt; Vec&lt;span style="color:#f92672"&gt;&amp;lt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#39;a&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;str&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; query &lt;span style="color:#f92672"&gt;=&lt;/span&gt; config.query.to_lowercase();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;mut&lt;/span&gt; results &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Vec::new();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; line &lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; contents.lines() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; config.case_sensitive {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; line.contains(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;config.query) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; results.push(line);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; line.to_lowercase().contains(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;query) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; results.push(line);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; results
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="运行命令"&gt;运行命令&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 基本搜索&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cargo run -- hello poem.txt
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 大小写不敏感搜索&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cargo run -- -i hello poem.txt
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="常见陷阱"&gt;常见陷阱&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;问题&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;th&gt;解决方案&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;参数越界&lt;/td&gt;
+&lt;td&gt;忘记检查 args.len()&lt;/td&gt;
+&lt;td&gt;加长度检查&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;大小写搜索低效&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;query.to_lowercase()&lt;/code&gt; 重复计算&lt;/td&gt;
+&lt;td&gt;提取到循环外&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;所有权转移&lt;/td&gt;
+&lt;td&gt;String 传入函数&lt;/td&gt;
+&lt;td&gt;使用引用 &lt;code&gt;&amp;amp;str&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="关键要点"&gt;关键要点&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;env::args()&lt;/code&gt; 返回 &lt;code&gt;Iterator&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;fs::read_to_string()&lt;/code&gt; 读取整个文件&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Config&lt;/code&gt; 模式解耦配置与业务逻辑&lt;/li&gt;
+&lt;li&gt;大小写不敏感：两边都转小写再比较&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;Result&lt;/code&gt; 处理用户输入错误更优雅&lt;/li&gt;
+&lt;/ol&gt;</description></item><item><title>Rust - 自动化测试</title><link>https://nikoart-liu.github.io/posts/rust%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/</link><pubDate>Thu, 29 Jan 2026 14:49:23 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/rust%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/</guid><description>&lt;h1 id="rust---自动化测试"&gt;Rust - 自动化测试&lt;/h1&gt;
+&lt;h2 id="知识概览"&gt;知识概览&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;核心主题&lt;/strong&gt;：Rust 内置测试框架、单元测试、集成测试&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;重要性&lt;/strong&gt;：⭐⭐⭐⭐ 掌握测试是工程化开发的基础&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;前置知识&lt;/strong&gt;：泛型与 Trait（第10章）、所有权（第4章）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="核心概念"&gt;核心概念&lt;/h2&gt;
+&lt;h3 id="测试框架架构"&gt;测试框架架构&lt;/h3&gt;
+&lt;p&gt;Rust 内置测试框架，无需外部依赖，通过 &lt;code&gt;#[test]&lt;/code&gt; 属性标记测试函数。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#[cfg(test)]&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 仅在测试时编译
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;mod&lt;/span&gt; tests {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;super&lt;/span&gt;::&lt;span style="color:#f92672"&gt;*&lt;/span&gt;; &lt;span style="color:#75715e"&gt;// 访问被测试模块
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;#[test]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;it_works&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;assert_eq!&lt;/span&gt;(&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt; &lt;span style="color:#f92672"&gt;+&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;assert!&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;#[test]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;#[should_panic(expected = &lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;错误信息&amp;#34;&lt;/span&gt;&lt;span style="color:#75715e"&gt;)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;it_panics&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;panic!&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;错误信息&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="断言宏"&gt;断言宏&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;宏&lt;/th&gt;
+&lt;th&gt;用途&lt;/th&gt;
+&lt;th&gt;示例&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;assert!(cond)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;条件为真&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;assert!(x &amp;gt; 0)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;assert_eq!(a, b)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;两值相等&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;assert_eq!(result, 5)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;assert_ne!(a, b)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;两值不等&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;assert_ne!(result, 0)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id="测试组织方式"&gt;测试组织方式&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;单元测试&lt;/strong&gt;：同文件 &lt;code&gt;mod tests&lt;/code&gt; 内&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;集成测试&lt;/strong&gt;：&lt;code&gt;tests/&lt;/code&gt; 目录下的独立文件&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;文档测试&lt;/strong&gt;：doc comment &lt;code&gt;///&lt;/code&gt; 中的代码示例&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="常用派生-trait"&gt;常用派生 trait&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#[derive(Debug, Clone, PartialEq)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Rectangle&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; width: &lt;span style="color:#66d9ef"&gt;u32&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; height: &lt;span style="color:#66d9ef"&gt;u32&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;trait&lt;/th&gt;
+&lt;th&gt;作用&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Debug&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;支持 &lt;code&gt;{:?}&lt;/code&gt; 打印&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Clone&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;支持 &lt;code&gt;.clone()&lt;/code&gt; 克隆&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;PartialEq&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;支持 &lt;code&gt;=&lt;/code&gt; 比较&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="实践项目"&gt;实践项目&lt;/h2&gt;
+&lt;h3 id="rectangle-结构体测试"&gt;Rectangle 结构体测试&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#[derive(Debug)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Rectangle&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; width: &lt;span style="color:#66d9ef"&gt;u32&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; height: &lt;span style="color:#66d9ef"&gt;u32&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;impl&lt;/span&gt; Rectangle {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pub&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;can_hold&lt;/span&gt;(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;self, other: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;Rectangle&lt;/span&gt;) -&amp;gt; &lt;span style="color:#66d9ef"&gt;bool&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; self.width &lt;span style="color:#f92672"&gt;&amp;gt;=&lt;/span&gt; other.width &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; self.height &lt;span style="color:#f92672"&gt;&amp;gt;=&lt;/span&gt; other.height
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#[cfg(test)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;mod&lt;/span&gt; tests {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;use&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;super&lt;/span&gt;::&lt;span style="color:#f92672"&gt;*&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;#[test]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;larger_can_hold_smaller&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; larger &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Rectangle { width: &lt;span style="color:#ae81ff"&gt;8&lt;/span&gt;, height: &lt;span style="color:#ae81ff"&gt;7&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; smaller &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Rectangle { width: &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;, height: &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;assert!&lt;/span&gt;(larger.can_hold(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;smaller));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;#[test]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;smaller_cannot_hold_larger&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; larger &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Rectangle { width: &lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;, height: &lt;span style="color:#ae81ff"&gt;7&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; smaller &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Rectangle { width: &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;, height: &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;assert!&lt;/span&gt;(&lt;span style="color:#f92672"&gt;!&lt;/span&gt;larger.can_hold(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;smaller));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="常见陷阱"&gt;常见陷阱&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;问题&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;th&gt;解决方案&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;字段不可访问&lt;/td&gt;
+&lt;td&gt;字段默认私有&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;pub struct&lt;/code&gt; 或公开字段&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;所有权转移&lt;/td&gt;
+&lt;td&gt;参数为 &lt;code&gt;Rectangle&lt;/code&gt; 而非 &lt;code&gt;&amp;amp;Rectangle&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;使用借用 &lt;code&gt;&amp;amp;Rectangle&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;调试打印失败&lt;/td&gt;
+&lt;td&gt;未派生 &lt;code&gt;Debug&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;添加 &lt;code&gt;#[derive(Debug)]&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="运行测试"&gt;运行测试&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cargo test &lt;span style="color:#75715e"&gt;# 运行所有测试&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cargo test test_name &lt;span style="color:#75715e"&gt;# 运行指定测试&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="关键要点"&gt;关键要点&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;#[cfg(test)]&lt;/code&gt; 仅在测试时编译&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;#[test]&lt;/code&gt; 标记测试函数&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;#[should_panic]&lt;/code&gt; 预期 panic&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;&amp;amp;Rectangle&lt;/code&gt; 借用避免所有权转移&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;#[derive(Debug)]&lt;/code&gt; 支持调试打印&lt;/li&gt;
+&lt;/ol&gt;</description></item><item><title>Rust - 泛型、Trait 和生命周期</title><link>https://nikoart-liu.github.io/posts/rust%E6%B3%9B%E5%9E%8Btrait%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</link><pubDate>Thu, 29 Jan 2026 14:46:33 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/rust%E6%B3%9B%E5%9E%8Btrait%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</guid><description>&lt;h1 id="rust---泛型trait-和生命周期"&gt;Rust - 泛型、Trait 和生命周期&lt;/h1&gt;
+&lt;h2 id="知识概览"&gt;知识概览&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;本章核心主题：通过抽象机制消除代码重复，实现灵活且安全的代码&lt;/li&gt;
+&lt;li&gt;重要程度：⭐⭐⭐（核心概念，后续章节的基础）&lt;/li&gt;
+&lt;li&gt;预计学习时间：2-3小时&lt;/li&gt;
+&lt;li&gt;前置知识要求：
+&lt;ul&gt;
+&lt;li&gt;基本语法（变量、函数、结构体、枚举）&lt;/li&gt;
+&lt;li&gt;所有权和借用&lt;/li&gt;
+&lt;li&gt;错误处理的基础（Option、Result）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="核心概念"&gt;核心概念&lt;/h2&gt;
+&lt;h3 id="泛型类型generics"&gt;泛型类型（Generics）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;定义&lt;/strong&gt;：允许代码处理多种类型而非具体类型的抽象机制&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;官方文档&lt;/strong&gt;：&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-cardlink" data-lang="cardlink"&gt;url: https://doc.rust-lang.org/book/ch10-01-syntax.html
+title: &amp;#34;Generic Data Types - The Rust Programming Language&amp;#34;
+host: doc.rust-lang.org
+favicon: favicon-de23e50b.svg
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;语法&lt;/strong&gt;：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-rust" data-lang="rust"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 函数泛型
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;largest&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;T: PartialOrd&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt;(list: &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;[T]) -&amp;gt; &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;T&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;mut&lt;/span&gt; largest &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;list[&lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; item &lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; list {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; item &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; largest {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; largest &lt;span style="color:#f92672"&gt;=&lt;/span&gt; item;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; largest
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 结构体泛型（单泛型）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Point&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;T&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; x: &lt;span style="color:#a6e22e"&gt;T&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; y: &lt;span style="color:#a6e22e"&gt;T&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 结构体泛型（多泛型）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Point&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;T, U&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; x: &lt;span style="color:#a6e22e"&gt;T&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; y: &lt;span style="color:#a6e22e"&gt;U&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// impl 块
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;impl&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;T&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; Point&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;T&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;x&lt;/span&gt;(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;self) -&amp;gt; &lt;span style="color:#66d9ef"&gt;&amp;amp;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;T&lt;/span&gt; { &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;self.x }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 为特定类型实现方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;impl&lt;/span&gt; Point&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;f32&lt;/span&gt;&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;distance_from_origin&lt;/span&gt;(&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;self) -&amp;gt; &lt;span style="color:#66d9ef"&gt;f32&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; (self.x.powi(&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;) &lt;span style="color:#f92672"&gt;+&lt;/span&gt; self.y.powi(&lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;)).sqrt()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;性能&lt;/strong&gt;：通过单态化在编译时生成具体类型代码，零运行时开销&lt;/p&gt;</description></item><item><title>Hello World</title><link>https://nikoart-liu.github.io/posts/helloworld/</link><pubDate>Thu, 29 Jan 2026 14:30:00 +0800</pubDate><guid>https://nikoart-liu.github.io/posts/helloworld/</guid><description>&lt;h1 id="欢迎来到我的博客"&gt;欢迎来到我的博客&lt;/h1&gt;
 &lt;p&gt;这是我在 Hugo 上搭建的第一篇博客文章。&lt;/p&gt;
 &lt;p&gt;Hugo 是一个用 Go 语言编写的静态网站生成器，它的速度非常快。&lt;/p&gt;
 &lt;h2 id="为什么选择-hugo"&gt;为什么选择 Hugo&lt;/h2&gt;

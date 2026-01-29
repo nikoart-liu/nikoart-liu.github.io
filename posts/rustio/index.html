@@ -1,0 +1,452 @@
+<!doctype html><html lang=en dir=auto data-theme=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Rust - IO | Spicy Bits</title><meta name=keywords content="Rust,编程语言"><meta name=description content='Rust - I/O
+知识概览
+
+核心主题：构建命令行搜索工具（minigrep）
+重要性：⭐⭐⭐⭐⭐ 综合应用前几章知识
+前置知识：环境安装、所有权、Trait、错误处理
+
+核心概念
+命令行参数解析
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    // args[0] = 程序名
+    // args[1] = 第一个参数
+    // args[2] = 第二个参数
+    println!("搜索词: {}", args[1]);
+    println!("文件: {}", args[2]);
+}
+文件读取
+use std::fs;
+
+let contents = fs::read_to_string(filename)
+    .expect("无法读取文件");
+// contents 是 String，包含整个文件内容
+配置模式（Config Pattern）
+struct Config {
+    query: String,
+    filename: String,
+    case_sensitive: bool,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &&#39;static str> {
+        if args.len() < 3 {
+            return Err("参数不足");
+        }
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        let case_sensitive = !args.iter().any(|arg| arg == "-i");
+        Ok(Config { query, filename, case_sensitive })
+    }
+}
+错误处理
+
+  
+      
+          场景
+          方式
+          示例
+      
+  
+  
+      
+          致命错误
+          expect
+          fs::read_to_string(...).expect(...)
+      
+      
+          可恢复错误
+          Result + match
+          Config::new(...)?
+      
+      
+          用户提示
+          eprintln!
+          eprintln!("用法: ...")
+      
+  
+
+项目结构
+minigrep/
+├── src/
+│   └── main.rs        # 主程序
+├── Cargo.toml
+└── poem.txt           # 测试文件
+完整代码
+// src/main.rs
+use std::env;
+use std::fs;
+
+struct Config {
+    query: String,
+    filename: String,
+    case_sensitive: bool,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &&#39;static str> {
+        if args.len() < 3 {
+            return Err("参数不足");
+        }
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        let case_sensitive = !args.iter().any(|arg| arg == "-i");
+        Ok(Config { query, filename, case_sensitive })
+    }
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let config = match Config::new(&amp;args) {
+        Ok(config) => config,
+        Err(e) => panic!("{e}"),
+    };
+
+    let contents = fs::read_to_string(&amp;config.filename)
+        .expect("无法读取文件");
+
+    let results = search(&amp;config, &amp;contents);
+    for line in results {
+        println!("{line}");
+    }
+}
+
+fn search<&#39;a>(config: &&#39;a Config, contents: &&#39;a str) -> Vec<&&#39;a str> {
+    let query = config.query.to_lowercase();
+    let mut results = Vec::new();
+
+    for line in contents.lines() {
+        if config.case_sensitive {
+            if line.contains(&amp;config.query) {
+                results.push(line);
+            }
+        } else {
+            if line.to_lowercase().contains(&amp;query) {
+                results.push(line);
+            }
+        }
+    }
+
+    results
+}
+运行命令
+# 基本搜索
+cargo run -- hello poem.txt
+
+# 大小写不敏感搜索
+cargo run -- -i hello poem.txt
+常见陷阱
+
+  
+      
+          问题
+          原因
+          解决方案
+      
+  
+  
+      
+          参数越界
+          忘记检查 args.len()
+          加长度检查
+      
+      
+          大小写搜索低效
+          query.to_lowercase() 重复计算
+          提取到循环外
+      
+      
+          所有权转移
+          String 传入函数
+          使用引用 &amp;str
+      
+  
+
+关键要点
+
+env::args() 返回 Iterator
+fs::read_to_string() 读取整个文件
+Config 模式解耦配置与业务逻辑
+大小写不敏感：两边都转小写再比较
+用 Result 处理用户输入错误更优雅
+'><meta name=author content="nikoart"><link rel=canonical href=https://nikoart-liu.github.io/posts/rustio/><link crossorigin=anonymous href=/assets/css/stylesheet.da3211e5ef867bf2b75fd5a6515cfed7195c011e8ab735694e203810a827097b.css integrity="sha256-2jIR5e+Ge/K3X9WmUVz+1xlcAR6KtzVpTiA4EKgnCXs=" rel="preload stylesheet" as=style><link rel=icon href=https://nikoart-liu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://nikoart-liu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://nikoart-liu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://nikoart-liu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://nikoart-liu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://nikoart-liu.github.io/posts/rustio/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}@media(prefers-color-scheme:light){.list::-webkit-scrollbar-thumb{border-color:var(--code-bg)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><meta property="og:url" content="https://nikoart-liu.github.io/posts/rustio/"><meta property="og:site_name" content="Spicy Bits"><meta property="og:title" content="Rust - IO"><meta property="og:description" content='Rust - I/O 知识概览 核心主题：构建命令行搜索工具（minigrep） 重要性：⭐⭐⭐⭐⭐ 综合应用前几章知识 前置知识：环境安装、所有权、Trait、错误处理 核心概念 命令行参数解析 use std::env; fn main() { let args: Vec<String> = env::args().collect(); // args[0] = 程序名 // args[1] = 第一个参数 // args[2] = 第二个参数 println!("搜索词: {}", args[1]); println!("文件: {}", args[2]); } 文件读取 use std::fs; let contents = fs::read_to_string(filename) .expect("无法读取文件"); // contents 是 String，包含整个文件内容 配置模式（Config Pattern） struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: &[String]) -> Result<Config, &&#39;static str> { if args.len() < 3 { return Err("参数不足"); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == "-i"); Ok(Config { query, filename, case_sensitive }) } } 错误处理 场景 方式 示例 致命错误 expect fs::read_to_string(...).expect(...) 可恢复错误 Result + match Config::new(...)? 用户提示 eprintln! eprintln!("用法: ...") 项目结构 minigrep/ ├── src/ │ └── main.rs # 主程序 ├── Cargo.toml └── poem.txt # 测试文件 完整代码 // src/main.rs use std::env; use std::fs; struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: &[String]) -> Result<Config, &&#39;static str> { if args.len() < 3 { return Err("参数不足"); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == "-i"); Ok(Config { query, filename, case_sensitive }) } } fn main() { let args: Vec<String> = env::args().collect(); let config = match Config::new(&amp;args) { Ok(config) => config, Err(e) => panic!("{e}"), }; let contents = fs::read_to_string(&amp;config.filename) .expect("无法读取文件"); let results = search(&amp;config, &amp;contents); for line in results { println!("{line}"); } } fn search<&#39;a>(config: &&#39;a Config, contents: &&#39;a str) -> Vec<&&#39;a str> { let query = config.query.to_lowercase(); let mut results = Vec::new(); for line in contents.lines() { if config.case_sensitive { if line.contains(&amp;config.query) { results.push(line); } } else { if line.to_lowercase().contains(&amp;query) { results.push(line); } } } results } 运行命令 # 基本搜索 cargo run -- hello poem.txt # 大小写不敏感搜索 cargo run -- -i hello poem.txt 常见陷阱 问题 原因 解决方案 参数越界 忘记检查 args.len() 加长度检查 大小写搜索低效 query.to_lowercase() 重复计算 提取到循环外 所有权转移 String 传入函数 使用引用 &amp;str 关键要点 env::args() 返回 Iterator fs::read_to_string() 读取整个文件 Config 模式解耦配置与业务逻辑 大小写不敏感：两边都转小写再比较 用 Result 处理用户输入错误更优雅 '><meta property="og:locale" content="zh-CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-01-29T14:50:22+08:00"><meta property="article:modified_time" content="2026-01-29T14:50:22+08:00"><meta property="article:tag" content="Rust"><meta property="article:tag" content="编程语言"><meta name=twitter:card content="summary"><meta name=twitter:title content="Rust - IO"><meta name=twitter:description content='Rust - I/O
+知识概览
+
+核心主题：构建命令行搜索工具（minigrep）
+重要性：⭐⭐⭐⭐⭐ 综合应用前几章知识
+前置知识：环境安装、所有权、Trait、错误处理
+
+核心概念
+命令行参数解析
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    // args[0] = 程序名
+    // args[1] = 第一个参数
+    // args[2] = 第二个参数
+    println!("搜索词: {}", args[1]);
+    println!("文件: {}", args[2]);
+}
+文件读取
+use std::fs;
+
+let contents = fs::read_to_string(filename)
+    .expect("无法读取文件");
+// contents 是 String，包含整个文件内容
+配置模式（Config Pattern）
+struct Config {
+    query: String,
+    filename: String,
+    case_sensitive: bool,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &&#39;static str> {
+        if args.len() < 3 {
+            return Err("参数不足");
+        }
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        let case_sensitive = !args.iter().any(|arg| arg == "-i");
+        Ok(Config { query, filename, case_sensitive })
+    }
+}
+错误处理
+
+  
+      
+          场景
+          方式
+          示例
+      
+  
+  
+      
+          致命错误
+          expect
+          fs::read_to_string(...).expect(...)
+      
+      
+          可恢复错误
+          Result + match
+          Config::new(...)?
+      
+      
+          用户提示
+          eprintln!
+          eprintln!("用法: ...")
+      
+  
+
+项目结构
+minigrep/
+├── src/
+│   └── main.rs        # 主程序
+├── Cargo.toml
+└── poem.txt           # 测试文件
+完整代码
+// src/main.rs
+use std::env;
+use std::fs;
+
+struct Config {
+    query: String,
+    filename: String,
+    case_sensitive: bool,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &&#39;static str> {
+        if args.len() < 3 {
+            return Err("参数不足");
+        }
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        let case_sensitive = !args.iter().any(|arg| arg == "-i");
+        Ok(Config { query, filename, case_sensitive })
+    }
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let config = match Config::new(&amp;args) {
+        Ok(config) => config,
+        Err(e) => panic!("{e}"),
+    };
+
+    let contents = fs::read_to_string(&amp;config.filename)
+        .expect("无法读取文件");
+
+    let results = search(&amp;config, &amp;contents);
+    for line in results {
+        println!("{line}");
+    }
+}
+
+fn search<&#39;a>(config: &&#39;a Config, contents: &&#39;a str) -> Vec<&&#39;a str> {
+    let query = config.query.to_lowercase();
+    let mut results = Vec::new();
+
+    for line in contents.lines() {
+        if config.case_sensitive {
+            if line.contains(&amp;config.query) {
+                results.push(line);
+            }
+        } else {
+            if line.to_lowercase().contains(&amp;query) {
+                results.push(line);
+            }
+        }
+    }
+
+    results
+}
+运行命令
+# 基本搜索
+cargo run -- hello poem.txt
+
+# 大小写不敏感搜索
+cargo run -- -i hello poem.txt
+常见陷阱
+
+  
+      
+          问题
+          原因
+          解决方案
+      
+  
+  
+      
+          参数越界
+          忘记检查 args.len()
+          加长度检查
+      
+      
+          大小写搜索低效
+          query.to_lowercase() 重复计算
+          提取到循环外
+      
+      
+          所有权转移
+          String 传入函数
+          使用引用 &amp;str
+      
+  
+
+关键要点
+
+env::args() 返回 Iterator
+fs::read_to_string() 读取整个文件
+Config 模式解耦配置与业务逻辑
+大小写不敏感：两边都转小写再比较
+用 Result 处理用户输入错误更优雅
+'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://nikoart-liu.github.io/posts/"},{"@type":"ListItem","position":2,"name":"Rust - IO","item":"https://nikoart-liu.github.io/posts/rustio/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Rust - IO","name":"Rust - IO","description":"Rust - I/O 知识概览 核心主题：构建命令行搜索工具（minigrep） 重要性：⭐⭐⭐⭐⭐ 综合应用前几章知识 前置知识：环境安装、所有权、Trait、错误处理 核心概念 命令行参数解析 use std::env; fn main() { let args: Vec\u0026lt;String\u0026gt; = env::args().collect(); // args[0] = 程序名 // args[1] = 第一个参数 // args[2] = 第二个参数 println!(\u0026#34;搜索词: {}\u0026#34;, args[1]); println!(\u0026#34;文件: {}\u0026#34;, args[2]); } 文件读取 use std::fs; let contents = fs::read_to_string(filename) .expect(\u0026#34;无法读取文件\u0026#34;); // contents 是 String，包含整个文件内容 配置模式（Config Pattern） struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: \u0026amp;[String]) -\u0026gt; Result\u0026lt;Config, \u0026amp;\u0026#39;static str\u0026gt; { if args.len() \u0026lt; 3 { return Err(\u0026#34;参数不足\u0026#34;); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == \u0026#34;-i\u0026#34;); Ok(Config { query, filename, case_sensitive }) } } 错误处理 场景 方式 示例 致命错误 expect fs::read_to_string(...).expect(...) 可恢复错误 Result + match Config::new(...)? 用户提示 eprintln! eprintln!(\u0026quot;用法: ...\u0026quot;) 项目结构 minigrep/ ├── src/ │ └── main.rs # 主程序 ├── Cargo.toml └── poem.txt # 测试文件 完整代码 // src/main.rs use std::env; use std::fs; struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: \u0026amp;[String]) -\u0026gt; Result\u0026lt;Config, \u0026amp;\u0026#39;static str\u0026gt; { if args.len() \u0026lt; 3 { return Err(\u0026#34;参数不足\u0026#34;); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == \u0026#34;-i\u0026#34;); Ok(Config { query, filename, case_sensitive }) } } fn main() { let args: Vec\u0026lt;String\u0026gt; = env::args().collect(); let config = match Config::new(\u0026amp;args) { Ok(config) =\u0026gt; config, Err(e) =\u0026gt; panic!(\u0026#34;{e}\u0026#34;), }; let contents = fs::read_to_string(\u0026amp;config.filename) .expect(\u0026#34;无法读取文件\u0026#34;); let results = search(\u0026amp;config, \u0026amp;contents); for line in results { println!(\u0026#34;{line}\u0026#34;); } } fn search\u0026lt;\u0026#39;a\u0026gt;(config: \u0026amp;\u0026#39;a Config, contents: \u0026amp;\u0026#39;a str) -\u0026gt; Vec\u0026lt;\u0026amp;\u0026#39;a str\u0026gt; { let query = config.query.to_lowercase(); let mut results = Vec::new(); for line in contents.lines() { if config.case_sensitive { if line.contains(\u0026amp;config.query) { results.push(line); } } else { if line.to_lowercase().contains(\u0026amp;query) { results.push(line); } } } results } 运行命令 # 基本搜索 cargo run -- hello poem.txt # 大小写不敏感搜索 cargo run -- -i hello poem.txt 常见陷阱 问题 原因 解决方案 参数越界 忘记检查 args.len() 加长度检查 大小写搜索低效 query.to_lowercase() 重复计算 提取到循环外 所有权转移 String 传入函数 使用引用 \u0026amp;str 关键要点 env::args() 返回 Iterator fs::read_to_string() 读取整个文件 Config 模式解耦配置与业务逻辑 大小写不敏感：两边都转小写再比较 用 Result 处理用户输入错误更优雅 ","keywords":["Rust","编程语言"],"articleBody":"Rust - I/O 知识概览 核心主题：构建命令行搜索工具（minigrep） 重要性：⭐⭐⭐⭐⭐ 综合应用前几章知识 前置知识：环境安装、所有权、Trait、错误处理 核心概念 命令行参数解析 use std::env; fn main() { let args: Vec\u003cString\u003e = env::args().collect(); // args[0] = 程序名 // args[1] = 第一个参数 // args[2] = 第二个参数 println!(\"搜索词: {}\", args[1]); println!(\"文件: {}\", args[2]); } 文件读取 use std::fs; let contents = fs::read_to_string(filename) .expect(\"无法读取文件\"); // contents 是 String，包含整个文件内容 配置模式（Config Pattern） struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: \u0026[String]) -\u003e Result\u003cConfig, \u0026'static str\u003e { if args.len() \u003c 3 { return Err(\"参数不足\"); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == \"-i\"); Ok(Config { query, filename, case_sensitive }) } } 错误处理 场景 方式 示例 致命错误 expect fs::read_to_string(...).expect(...) 可恢复错误 Result + match Config::new(...)? 用户提示 eprintln! eprintln!(\"用法: ...\") 项目结构 minigrep/ ├── src/ │ └── main.rs # 主程序 ├── Cargo.toml └── poem.txt # 测试文件 完整代码 // src/main.rs use std::env; use std::fs; struct Config { query: String, filename: String, case_sensitive: bool, } impl Config { fn new(args: \u0026[String]) -\u003e Result\u003cConfig, \u0026'static str\u003e { if args.len() \u003c 3 { return Err(\"参数不足\"); } let query = args[1].clone(); let filename = args[2].clone(); let case_sensitive = !args.iter().any(|arg| arg == \"-i\"); Ok(Config { query, filename, case_sensitive }) } } fn main() { let args: Vec\u003cString\u003e = env::args().collect(); let config = match Config::new(\u0026args) { Ok(config) =\u003e config, Err(e) =\u003e panic!(\"{e}\"), }; let contents = fs::read_to_string(\u0026config.filename) .expect(\"无法读取文件\"); let results = search(\u0026config, \u0026contents); for line in results { println!(\"{line}\"); } } fn search\u003c'a\u003e(config: \u0026'a Config, contents: \u0026'a str) -\u003e Vec\u003c\u0026'a str\u003e { let query = config.query.to_lowercase(); let mut results = Vec::new(); for line in contents.lines() { if config.case_sensitive { if line.contains(\u0026config.query) { results.push(line); } } else { if line.to_lowercase().contains(\u0026query) { results.push(line); } } } results } 运行命令 # 基本搜索 cargo run -- hello poem.txt # 大小写不敏感搜索 cargo run -- -i hello poem.txt 常见陷阱 问题 原因 解决方案 参数越界 忘记检查 args.len() 加长度检查 大小写搜索低效 query.to_lowercase() 重复计算 提取到循环外 所有权转移 String 传入函数 使用引用 \u0026str 关键要点 env::args() 返回 Iterator fs::read_to_string() 读取整个文件 Config 模式解耦配置与业务逻辑 大小写不敏感：两边都转小写再比较 用 Result 处理用户输入错误更优雅 ","wordCount":"324","inLanguage":"en","datePublished":"2026-01-29T14:50:22+08:00","dateModified":"2026-01-29T14:50:22+08:00","author":{"@type":"Person","name":"nikoart"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://nikoart-liu.github.io/posts/rustio/"},"publisher":{"@type":"Organization","name":"Spicy Bits","logo":{"@type":"ImageObject","url":"https://nikoart-liu.github.io/favicon.ico"}}}</script></head><body id=top><header class=header><nav class=nav><div class=logo><a href=https://nikoart-liu.github.io/ accesskey=h title="Spicy Bits (Alt + H)">Spicy Bits</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://nikoart-liu.github.io/archives/ title=归档><span>归档</span></a></li><li><a href=https://nikoart-liu.github.io/categories/ title=分类><span>分类</span></a></li><li><a href=https://nikoart-liu.github.io/tags/ title=标签><span>标签</span></a></li><li><a href=https://nikoart-liu.github.io/search/ title="搜索 (Alt + /)" accesskey=/><span>搜索</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://nikoart-liu.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://nikoart-liu.github.io/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">Rust - IO</h1><div class=post-meta><span title='2026-01-29 14:50:22 +0800 +0800'>January 29, 2026</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>324 words</span>&nbsp;·&nbsp;<span>nikoart</span></div></header><div class=post-content><h1 id=rust---io>Rust - I/O<a hidden class=anchor aria-hidden=true href=#rust---io>#</a></h1><h2 id=知识概览>知识概览<a hidden class=anchor aria-hidden=true href=#知识概览>#</a></h2><ul><li><strong>核心主题</strong>：构建命令行搜索工具（minigrep）</li><li><strong>重要性</strong>：⭐⭐⭐⭐⭐ 综合应用前几章知识</li><li><strong>前置知识</strong>：环境安装、所有权、Trait、错误处理</li></ul><h2 id=核心概念>核心概念<a hidden class=anchor aria-hidden=true href=#核心概念>#</a></h2><h3 id=命令行参数解析>命令行参数解析<a hidden class=anchor aria-hidden=true href=#命令行参数解析>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-rust data-lang=rust><span style=display:flex><span><span style=color:#66d9ef>use</span> std::env;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> args: Vec<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> env::args().collect();
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// args[0] = 程序名
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>// args[1] = 第一个参数
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>// args[2] = 第二个参数
+</span></span></span><span style=display:flex><span>    <span style=color:#a6e22e>println!</span>(<span style=color:#e6db74>&#34;搜索词: </span><span style=color:#e6db74>{}</span><span style=color:#e6db74>&#34;</span>, args[<span style=color:#ae81ff>1</span>]);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>println!</span>(<span style=color:#e6db74>&#34;文件: </span><span style=color:#e6db74>{}</span><span style=color:#e6db74>&#34;</span>, args[<span style=color:#ae81ff>2</span>]);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=文件读取>文件读取<a hidden class=anchor aria-hidden=true href=#文件读取>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-rust data-lang=rust><span style=display:flex><span><span style=color:#66d9ef>use</span> std::fs;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>let</span> contents <span style=color:#f92672>=</span> fs::read_to_string(filename)
+</span></span><span style=display:flex><span>    .expect(<span style=color:#e6db74>&#34;无法读取文件&#34;</span>);
+</span></span><span style=display:flex><span><span style=color:#75715e>// contents 是 String，包含整个文件内容
+</span></span></span></code></pre></div><h3 id=配置模式config-pattern>配置模式（Config Pattern）<a hidden class=anchor aria-hidden=true href=#配置模式config-pattern>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-rust data-lang=rust><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>Config</span> {
+</span></span><span style=display:flex><span>    query: String,
+</span></span><span style=display:flex><span>    filename: String,
+</span></span><span style=display:flex><span>    case_sensitive: <span style=color:#66d9ef>bool</span>,
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>impl</span> Config {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>new</span>(args: <span style=color:#66d9ef>&amp;</span>[String]) -&gt; Result<span style=color:#f92672>&lt;</span>Config, <span style=color:#f92672>&amp;</span>&#39;static <span style=color:#66d9ef>str</span><span style=color:#f92672>&gt;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> args.len() <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>3</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> Err(<span style=color:#e6db74>&#34;参数不足&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> query <span style=color:#f92672>=</span> args[<span style=color:#ae81ff>1</span>].clone();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> filename <span style=color:#f92672>=</span> args[<span style=color:#ae81ff>2</span>].clone();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> case_sensitive <span style=color:#f92672>=</span> <span style=color:#f92672>!</span>args.iter().any(<span style=color:#f92672>|</span>arg<span style=color:#f92672>|</span> arg <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;-i&#34;</span>);
+</span></span><span style=display:flex><span>        Ok(Config { query, filename, case_sensitive })
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=错误处理>错误处理<a hidden class=anchor aria-hidden=true href=#错误处理>#</a></h3><table><thead><tr><th>场景</th><th>方式</th><th>示例</th></tr></thead><tbody><tr><td>致命错误</td><td><code>expect</code></td><td><code>fs::read_to_string(...).expect(...)</code></td></tr><tr><td>可恢复错误</td><td><code>Result</code> + <code>match</code></td><td><code>Config::new(...)?</code></td></tr><tr><td>用户提示</td><td><code>eprintln!</code></td><td><code>eprintln!("用法: ...")</code></td></tr></tbody></table><h2 id=项目结构>项目结构<a hidden class=anchor aria-hidden=true href=#项目结构>#</a></h2><pre tabindex=0><code>minigrep/
+├── src/
+│   └── main.rs        # 主程序
+├── Cargo.toml
+└── poem.txt           # 测试文件
+</code></pre><h2 id=完整代码>完整代码<a hidden class=anchor aria-hidden=true href=#完整代码>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-rust data-lang=rust><span style=display:flex><span><span style=color:#75715e>// src/main.rs
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> std::env;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> std::fs;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>Config</span> {
+</span></span><span style=display:flex><span>    query: String,
+</span></span><span style=display:flex><span>    filename: String,
+</span></span><span style=display:flex><span>    case_sensitive: <span style=color:#66d9ef>bool</span>,
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>impl</span> Config {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>new</span>(args: <span style=color:#66d9ef>&amp;</span>[String]) -&gt; Result<span style=color:#f92672>&lt;</span>Config, <span style=color:#f92672>&amp;</span>&#39;static <span style=color:#66d9ef>str</span><span style=color:#f92672>&gt;</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> args.len() <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>3</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> Err(<span style=color:#e6db74>&#34;参数不足&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> query <span style=color:#f92672>=</span> args[<span style=color:#ae81ff>1</span>].clone();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> filename <span style=color:#f92672>=</span> args[<span style=color:#ae81ff>2</span>].clone();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>let</span> case_sensitive <span style=color:#f92672>=</span> <span style=color:#f92672>!</span>args.iter().any(<span style=color:#f92672>|</span>arg<span style=color:#f92672>|</span> arg <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;-i&#34;</span>);
+</span></span><span style=display:flex><span>        Ok(Config { query, filename, case_sensitive })
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> args: Vec<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> env::args().collect();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> config <span style=color:#f92672>=</span> <span style=color:#66d9ef>match</span> Config::new(<span style=color:#f92672>&amp;</span>args) {
+</span></span><span style=display:flex><span>        Ok(config) <span style=color:#f92672>=&gt;</span> config,
+</span></span><span style=display:flex><span>        Err(e) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>panic!</span>(<span style=color:#e6db74>&#34;</span><span style=color:#e6db74>{e}</span><span style=color:#e6db74>&#34;</span>),
+</span></span><span style=display:flex><span>    };
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> contents <span style=color:#f92672>=</span> fs::read_to_string(<span style=color:#f92672>&amp;</span>config.filename)
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;无法读取文件&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> results <span style=color:#f92672>=</span> search(<span style=color:#f92672>&amp;</span>config, <span style=color:#f92672>&amp;</span>contents);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> line <span style=color:#66d9ef>in</span> results {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>println!</span>(<span style=color:#e6db74>&#34;</span><span style=color:#e6db74>{line}</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>search</span><span style=color:#f92672>&lt;</span><span style=color:#a6e22e>&#39;a</span><span style=color:#f92672>&gt;</span>(config: <span style=color:#66d9ef>&amp;</span><span style=color:#a6e22e>&#39;a</span> <span style=color:#a6e22e>Config</span>, contents: <span style=color:#66d9ef>&amp;</span><span style=color:#a6e22e>&#39;a</span> <span style=color:#66d9ef>str</span>) -&gt; Vec<span style=color:#f92672>&lt;&amp;</span><span style=color:#a6e22e>&#39;a</span> <span style=color:#66d9ef>str</span><span style=color:#f92672>&gt;</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> query <span style=color:#f92672>=</span> config.query.to_lowercase();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> results <span style=color:#f92672>=</span> Vec::new();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> line <span style=color:#66d9ef>in</span> contents.lines() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> config.case_sensitive {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> line.contains(<span style=color:#f92672>&amp;</span>config.query) {
+</span></span><span style=display:flex><span>                results.push(line);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> line.to_lowercase().contains(<span style=color:#f92672>&amp;</span>query) {
+</span></span><span style=display:flex><span>                results.push(line);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    results
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=运行命令>运行命令<a hidden class=anchor aria-hidden=true href=#运行命令>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 基本搜索</span>
+</span></span><span style=display:flex><span>cargo run -- hello poem.txt
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 大小写不敏感搜索</span>
+</span></span><span style=display:flex><span>cargo run -- -i hello poem.txt
+</span></span></code></pre></div><h2 id=常见陷阱>常见陷阱<a hidden class=anchor aria-hidden=true href=#常见陷阱>#</a></h2><table><thead><tr><th>问题</th><th>原因</th><th>解决方案</th></tr></thead><tbody><tr><td>参数越界</td><td>忘记检查 args.len()</td><td>加长度检查</td></tr><tr><td>大小写搜索低效</td><td><code>query.to_lowercase()</code> 重复计算</td><td>提取到循环外</td></tr><tr><td>所有权转移</td><td>String 传入函数</td><td>使用引用 <code>&amp;str</code></td></tr></tbody></table><h2 id=关键要点>关键要点<a hidden class=anchor aria-hidden=true href=#关键要点>#</a></h2><ol><li><code>env::args()</code> 返回 <code>Iterator</code></li><li><code>fs::read_to_string()</code> 读取整个文件</li><li><code>Config</code> 模式解耦配置与业务逻辑</li><li>大小写不敏感：两边都转小写再比较</li><li>用 <code>Result</code> 处理用户输入错误更优雅</li></ol></div><footer class=post-footer><ul class=post-tags><li><a href=https://nikoart-liu.github.io/tags/rust/>Rust</a></li><li><a href=https://nikoart-liu.github.io/tags/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/>编程语言</a></li></ul><nav class=paginav><a class=prev href=https://nikoart-liu.github.io/posts/rust%E8%BF%AD%E4%BB%A3%E5%99%A8%E4%B8%8E%E9%97%AD%E5%8C%85/><span class=title>« Prev</span><br><span>Rust - 迭代器与闭包</span>
+</a><a class=next href=https://nikoart-liu.github.io/posts/rust%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/><span class=title>Next »</span><br><span>Rust - 自动化测试</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2026 <a href=https://nikoart-liu.github.io/>Spicy Bits</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentColor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script></body></html>
